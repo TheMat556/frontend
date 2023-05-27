@@ -9,7 +9,8 @@ const routes: Routes = [
   { path: '', component: LandingPageComponent},
   { path: 'create-room', component: CreateRoomComponent },
   { path: 'join-room', component: JoinRoomComponent },
-  { path: 'music-room', component: MusicRoomComponent}
+  { path: 'music-room/:id', component: MusicRoomComponent},
+  { path: '**', component: LandingPageComponent}
 ];
 
 @NgModule({

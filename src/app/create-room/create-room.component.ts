@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {RoomService} from "../room.service";
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-room',
@@ -10,11 +11,13 @@ export class CreateRoomComponent {
   public guestCanPause: string = "true"
   public votesToSkip: number = 2;
 
-  constructor(private roomService: RoomService) { }
+  constructor(private roomService: RoomService, private router: Router) { }
 
   createRoomOnClick() {
     this.roomService.createRoom(this.guestCanPause, this.votesToSkip)
-      .then((result: any) => console.log(result));
+      .then((result: any) => {
+        this.router.navigate(['/music-room/' + result.roomIdentifier])
+      });
   }
 
 
