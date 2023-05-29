@@ -18,7 +18,7 @@ export class RoomService {
         {
           "guestCanPause": guestCanPause,
           "votesToSkip": votesToSkip
-        }
+        }, {withCredentials: true}
       );
       return lastValueFrom(response);
     } catch (error) {

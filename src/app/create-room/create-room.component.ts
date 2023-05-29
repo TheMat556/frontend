@@ -16,7 +16,7 @@ export class CreateRoomComponent {
   createRoomOnClick() {
     this.roomService.createRoom(this.guestCanPause, this.votesToSkip)
       .then((result: any) => {
-        this.router.navigate(['/music-room/' + result.roomIdentifier])
+        //this.router.navigate(['/music-room/' + result.roomIdentifier])
       });
   }
 

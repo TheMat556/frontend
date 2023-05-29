@@ -18,7 +18,7 @@ export class MusicRoomComponent {
       if(result !== null)
       {
         this.spotifyService.loginIntoSpotify().then((response) => {
-          window.open(response.toString())
+          //window.open(response.toString())
           //TODO: UI should load until the authentication process is finished
 
         })
