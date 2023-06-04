@@ -2,7 +2,7 @@ import {Component, ChangeDetectorRef} from '@angular/core';
 import {RoomService} from "../room.service";
 import {NavigationExtras, Router} from "@angular/router";
 import {SpotifyService} from "../spotify.service";
-import {BehaviorSubject, interval, Observable, of, repeat, Subscription} from "rxjs";
+import {BehaviorSubject, interval, Observable, of, repeat, Subject, Subscription} from "rxjs";
 import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
@@ -22,33 +22,44 @@ export class MusicRoomComponent {
   neededVoteSkips: number = 0;
   currentVoteSkips: number = 0;
 
-  loading: boolean = true;
   subscription: Subscription | undefined;
-  constructor(public roomService: RoomService, private spotifyService: SpotifyService, private router: Router, private cdr: ChangeDetectorRef, public snackBar: MatSnackBar) {
+
+  loading: boolean = true;
+  loading$: Observable<boolean> = of(true);
+  private loadingSubject: Subject<boolean> = new Subject<boolean>();
+  constructor(public roomService: RoomService, private spotifyService: SpotifyService, private router: Router, public snackBar: MatSnackBar) {
+    this.loading$ = this.loadingSubject.asObservable();
+
+    this.loading$.subscribe(value => {
+      this.loading = value;
+    })
   }
 
   async ngOnInit() {
     const roomIdentifier = this.router.url.split('/').pop();
+    let response;
     //TODO: Could specify the error, so we differenciate between connection and server error
+
     try {
       await this.roomService.fetchRoom(roomIdentifier!);
+      response = await this.spotifyService.loginIntoSpotify();
 
-      this.spotifyService.loginIntoSpotify().then((response: any): any => {
-        if (response !== null) {
-          return this.openNewWindow(response.toString());
-        }
-      }).then(() => {
-        this.loading = false;
-        this.cdr.detectChanges();
+      if(response != null) {
+        await this.openNewWindow(response.toString())
+      }
 
-        this.subscription = interval(1000)
-          .subscribe(() => {
-            this.getCurrentSong(this.roomService.room.roomIdentifier)
-          });
-      })
+      this.loadingSubject.next(false);
+
+      this.subscription = interval(1000)
+        .subscribe(() => {
+          this.getCurrentSong(this.roomService.room.roomIdentifier)
+        });
+
     } catch(error) {
+      console.log(response)
       this.openSnackBar("There seems to be a connection issue", "CONNECT")
     }
+
   }
 
   openSnackBar(message: string, action: string) {
