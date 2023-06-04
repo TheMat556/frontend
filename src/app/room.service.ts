@@ -8,10 +8,11 @@ import {lastValueFrom} from "rxjs";
   providedIn: 'root'
 })
 export class RoomService {
+  room: any;
 
   constructor(private http: HttpClient) { }
 
-  async createRoom(guestCanPause: string, votesToSkip: number): Promise<any> {
+  async createRoom(guestCanPause: string, votesToSkip: number): Promise<void> {
     try {
       const response = this.http.post(
         credentials.baseUri + credentials.endpoints.room.create,
@@ -20,22 +21,35 @@ export class RoomService {
           "votesToSkip": votesToSkip
         }, {withCredentials: true}
       );
-      return lastValueFrom(response);
+      this.room = await lastValueFrom(response);
     } catch (error) {
-      throw error;
-      return null;
+      throw new Error();
     }
   }
 
-  async fetchRoom(roomIdentifier: string): Promise<any> {
+  async fetchRoom(roomIdentifier: string): Promise<void> {
     try {
       const response = this.http.get(
         credentials.baseUri + credentials.endpoints.room.get + `?roomIdentifier=${roomIdentifier}`,
+        {withCredentials: true}
       );
-      return lastValueFrom(response)
+      this.room = await lastValueFrom(response);
     } catch (error) {
-      throw error;
-      return null;
+      throw new Error();
+    }
+
+  }
+
+  async leaveRoom(roomIdentifier: string): Promise<void> {
+    try {
+      const response = this.http.get(
+        credentials.baseUri + credentials.endpoints.room.leave_room + `?roomIdentifier=${roomIdentifier}`,
+        {withCredentials: true}
+      );
+      console.log(lastValueFrom(response));
+    } catch (error) {
+      throw new Error();
     }
   }
+
 }

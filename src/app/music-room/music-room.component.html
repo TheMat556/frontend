@@ -1,48 +1,68 @@
 <div class="flex flex-col justify-center h-screen items-center">
 
-  <div class="mb-5 w-96 justify-between text-[30px] flex">
-    <i class="bi bi-box-arrow-right cursor-pointer"></i>
-    <i class="bi bi-gear-fill cursor-pointer"></i>
+  <div class="relative z-[5]">
+
+    <div class="justify-center items-center flex flex-col mb-3">
+      <h1 class="font-bold text-2xl">RoomID</h1>
+      <p>{{this.roomService.room.roomIdentifier}}</p>
+    </div>
+
+    <div class="mb-5 w-96 justify-between text-[30px] flex">
+      <i class="bi bi-box-arrow-right cursor-pointer" (click)="leaveRoom()"></i>
+      <i class="bi bi-gear-fill cursor-pointer" routerLink="/create-room"></i>
+    </div>
+
+    <div class="flex justify-center">
+      <!--<div class="card w-80 h-80 bg-base-100 shadow-xl mt-8 brightness-50">
+        <img class="rounded-[20px]" src="./assets/dec110.jpg" alt="cover_next_song"/>
+      </div>-->
+
+      <div *ngIf="!loading" class="card w-96 bg-base-100 shadow-xl">
+        <img class="rounded-[20px]" [src]="currentImgUrl"/>
+      </div>
+
+      <div *ngIf="loading" class="card w-96 h-96 bg-base-100 shadow-xl justify-center items-center">
+        <mat-progress-spinner color="primary" mode="indeterminate"></mat-progress-spinner>
+      </div>
+
+      <!--<div class="card w-80 h-80 bg-base-100 shadow-xl z-10 mt-8 brightness-50">
+        <img class="rounded-[20px]" src="./assets/bil-1.jpg" alt="cover_prev_song"/>
+      </div>-->
+    </div>
+
+    <div class="mt-10 w-96">
+      <h2 class="text-[22px] font-semibold">{{ songTitle }}</h2>
+      <p>{{ artist }}</p>
+    </div>
+
+    <div class="relative flex flex-col mt-5">
+      <progress class="progress w-96 bg-base-300 progress-primary" [value]="currentProgress"
+                [max]="songDuration"></progress>
+      <div class="flex justify-between mx-2">
+        <p>
+          {{ formatDuration(currentProgress) }}
+        </p>
+        <p>
+          {{ formatDuration(songDuration) }}
+        </p>
+      </div>
+
+      <div class="flex justify-between mx-5 mt-2 text-[60px]">
+        <i class="bi bi-skip-start cursor-pointer"></i>
+        <i *ngIf="playingStatus" class="bi bi-pause-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
+        <i *ngIf="!playingStatus" class="bi bi-play-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
+        <i class="bi bi-skip-end cursor-pointer" (click)="skipSong()"></i>
+      </div>
+
+      <div class="flex justify-center items-center">
+        <h2 class="text-[22px] font-semibold">{{ currentVoteSkips }}/{{ neededVoteSkips }}</h2>
+      </div>
+    </div>
   </div>
 
-  <div class="flex justify-center relative mb-[50px]">
-    <div class="card w-80 h-80 bg-base-100 shadow-xl mt-8 brightness-50">
-      <img class="rounded-[20px]" src="./assets/dec110.jpg" alt="cover_next_song"/>
-    </div>
-
-    <div class="card w-96 bg-base-100 shadow-xl z-20 absolute">
-      <img class="rounded-[20px]" src="./assets/optimized_large_thumb_stage.jpg" alt="cover_current_song"/>
-    </div>
-
-    <div class="card w-80 h-80 bg-base-100 shadow-xl z-10 mt-8 brightness-50">
-      <img class="rounded-[20px]" src="./assets/bil-1.jpg" alt="cover_prev_song"/>
-    </div>
+  <div class="z-1">
+    <div class='absolute w-[40%] h-[35%] top-0 pink__gradient'></div>
+    <div class='absolute w-[50%] h-[50%] left-20 bottom-20 blue__gradient'></div>
   </div>
-
-  <div class="mt-10 w-96">
-    <h2 class="text-[22px] font-semibold">Songtitle</h2>
-    <p>Artist</p>
-  </div>
-
-  <div class="relative flex flex-col mt-5">
-    <progress class="progress w-96 bg-base-300 progress-primary" value="50" max="100"></progress>
-    <div class="flex justify-between mx-2">
-      <p>
-        START
-      </p>
-      <p>
-        END
-      </p>
-    </div>
-
-    <div class="flex justify-between mx-5 mt-2 text-[60px]">
-      <i class="bi bi-skip-start cursor-pointer"></i>
-      <i class="bi bi-pause-circle-fill cursor-pointer"></i>
-      <!--<i class="bi bi-play-circle-fill"></i>-->
-      <i class="bi bi-skip-end cursor-pointer"></i>
-    </div>
-
-  </div>
-
 
 </div>

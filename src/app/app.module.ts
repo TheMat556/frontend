@@ -9,6 +9,11 @@ import { JoinRoomComponent } from './join-room/join-room.component';
 import { MusicRoomComponent } from './music-room/music-room.component';
 import {FormsModule} from "@angular/forms";
 import { HttpClientModule } from '@angular/common/http';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ErrorAlertComponent } from './error-alert/error-alert.component';
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -16,12 +21,16 @@ import { HttpClientModule } from '@angular/common/http';
     CreateRoomComponent,
     JoinRoomComponent,
     MusicRoomComponent,
+    ErrorAlertComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
+    MatSnackBarModule,
     HttpClientModule,
+    BrowserAnimationsModule,
+    MatProgressSpinnerModule
   ],
   providers: [],
   bootstrap: [AppComponent]
