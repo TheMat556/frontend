@@ -1,7 +1,8 @@
-import {ChangeDetectorRef, Component} from '@angular/core';
+import { Component} from '@angular/core';
 import {RoomService} from "../room.service";
-import { Router } from '@angular/router';
+import {Router} from '@angular/router';
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {Observable, of, Subject} from "rxjs";
 
 @Component({
   selector: 'app-create-room',
@@ -16,24 +17,33 @@ export class CreateRoomComponent {
   public errorMessage: string = "";
 
   loading: boolean = false;
+  loading$: Observable<boolean> = of(true);
+  private loadingSubject: Subject<boolean> = new Subject<boolean>();
 
-  constructor(private roomService: RoomService, private router: Router, public snackBar: MatSnackBar, private cdr: ChangeDetectorRef) { }
+  ngOnInit() {
+    this.loading$ = this.loadingSubject.asObservable();
+
+    this.loading$.subscribe(value => {
+      this.loading = value;
+    });
+  }
+
+  constructor(private roomService: RoomService, private router: Router, public snackBar: MatSnackBar) {
+  }
 
   async createRoomOnClick() {
     try {
-      this.loading = true
+      this.loadingSubject.next(true);
       await this.roomService.createRoom(this.guestCanPause, this.requiredVotesToSkip)
 
-      if(this.roomService.room == null)
-      {
+      if (this.roomService.room == null) {
         throw new Error();
       }
 
       this.router.navigateByUrl('/music-room/' + this.roomService.room.roomIdentifier)
     } catch (error) {
-      this.loading = false
+      this.loadingSubject.next(false);
       this.openSnackBar("Could not connect to the server.", "RETRY")
-      this.cdr.detectChanges()
     }
   }
 

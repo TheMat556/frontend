@@ -11,7 +11,6 @@ import {FormsModule} from "@angular/forms";
 import { HttpClientModule } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ErrorAlertComponent } from './error-alert/error-alert.component';
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 
 @NgModule({
@@ -21,7 +20,6 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
     CreateRoomComponent,
     JoinRoomComponent,
     MusicRoomComponent,
-    ErrorAlertComponent,
   ],
   imports: [
     BrowserModule,
