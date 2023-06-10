@@ -12,6 +12,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatSnackBarModule} from "@angular/material/snack-bar";
+import { PageLoaderComponent } from './page-loader/page-loader.component';
+import { DeviceModalComponent } from './device-modal/device-modal.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +22,8 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
     CreateRoomComponent,
     JoinRoomComponent,
     MusicRoomComponent,
+    PageLoaderComponent,
+    DeviceModalComponent,
   ],
   imports: [
     BrowserModule,

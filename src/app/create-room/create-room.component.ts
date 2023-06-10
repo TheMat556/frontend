@@ -2,7 +2,8 @@ import { Component} from '@angular/core';
 import {RoomService} from "../room.service";
 import {Router} from '@angular/router';
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {Observable, of, Subject} from "rxjs";
+import {PageLoaderService} from "../page-loader.service";
+import {SnackbarService} from "../snack-bar.service";
 
 @Component({
   selector: 'app-create-room',
@@ -13,27 +14,12 @@ export class CreateRoomComponent {
   public guestCanPause: string = "true"
   public requiredVotesToSkip: number = 2;
 
-  public error: boolean = false;
-  public errorMessage: string = "";
+  constructor(private snackBarService: SnackbarService, private roomService: RoomService, private router: Router, private pageLoaderService: PageLoaderService, public snackBar: MatSnackBar) { }
 
-  loading: boolean = false;
-  loading$: Observable<boolean> = of(true);
-  private loadingSubject: Subject<boolean> = new Subject<boolean>();
-
-  ngOnInit() {
-    this.loading$ = this.loadingSubject.asObservable();
-
-    this.loading$.subscribe(value => {
-      this.loading = value;
-    });
-  }
-
-  constructor(private roomService: RoomService, private router: Router, public snackBar: MatSnackBar) {
-  }
 
   async createRoomOnClick() {
     try {
-      this.loadingSubject.next(true);
+      this.pageLoaderService.showFullPageLoader("Loading")
       await this.roomService.createRoom(this.guestCanPause, this.requiredVotesToSkip)
 
       if (this.roomService.room == null) {
@@ -41,22 +27,13 @@ export class CreateRoomComponent {
       }
 
       this.router.navigateByUrl('/music-room/' + this.roomService.room.roomIdentifier)
+      this.pageLoaderService.hideFullPageLoader()
     } catch (error) {
-      this.loadingSubject.next(false);
-      this.openSnackBar("Could not connect to the server.", "RETRY")
-    }
-  }
-
-  openSnackBar(message: string, action: string) {
-    this.snackBar.open(message, action, {
-      duration: 3000,
-    });
-
-    this.snackBar._openedSnackBarRef?.onAction().subscribe(
-      () => {
+      this.pageLoaderService.hideFullPageLoader()
+      this.snackBarService.openSnackBar("Could not connect to the server.", "RETRY", () => {
         this.createRoomOnClick();
-      }
-    )
+      });
+    }
   }
 
 

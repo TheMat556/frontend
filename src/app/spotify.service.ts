@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
+import {Injectable} from '@angular/core';
+import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 
 import credentials from "../assets/credentials.json";
-import {lastValueFrom} from "rxjs";
+import {catchError, lastValueFrom, throwError} from "rxjs";
 import {RoomService} from "./room.service";
 
 @Injectable({
@@ -10,9 +10,12 @@ import {RoomService} from "./room.service";
 })
 export class SpotifyService {
 
-  constructor(private http: HttpClient, private roomServie: RoomService) {}
+  //TODO rewrite try / catch
 
-  loginIntoSpotify () {
+  constructor(private http: HttpClient, private roomServie: RoomService) {
+  }
+
+  loginIntoSpotify() {
     const response = this.http.get(
       credentials.baseUri + credentials.endpoints.spotify.login + "?roomIdentifier=" + this.roomServie.room.roomIdentifier,
       {withCredentials: true}
@@ -21,12 +24,45 @@ export class SpotifyService {
   }
 
   getCurrentSong(roomIdentifier: string) {
+    try {
+      const response = this.http.get(
+        credentials.baseUri + credentials.endpoints.spotify.current_song + "?code=" + roomIdentifier,
+        {withCredentials: true}
+      ).pipe(
+        catchError((error: HttpErrorResponse) => {
+          return throwError(error)
+        })
+      )
+
+      return lastValueFrom(response);
+    } catch (error) {
+      console.log("!!")
+      throw error
+    }
+  }
+
+  getDevices() {
+
     const response = this.http.get(
-      credentials.baseUri + credentials.endpoints.spotify.current_song + "?code=" + roomIdentifier,
+      credentials.baseUri + credentials.endpoints.spotify.get_devices,
       {withCredentials: true}
+    ).pipe(
+      catchError((error) => {
+        return throwError(error);
+      })
     )
+
     return lastValueFrom(response);
   }
+
+  forceDeviceToPlay(deviceId: any) {
+    const response = this.http.post(
+      credentials.baseUri + credentials.endpoints.spotify.forceDeviceToPlay,
+      {deviceId},
+      {withCredentials: true}
+    )
+  }
+
 
   togglePlayingStatus(roomIdentifier: string) {
     const response = this.http.get(

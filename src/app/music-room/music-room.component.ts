@@ -4,6 +4,8 @@ import {NavigationExtras, Router} from "@angular/router";
 import {SpotifyService} from "../spotify.service";
 import {BehaviorSubject, interval, Observable, of, repeat, Subject, Subscription} from "rxjs";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {PageLoaderService} from "../page-loader.service";
+import {SnackbarService} from "../snack-bar.service";
 
 @Component({
   selector: 'app-music-room',
@@ -23,17 +25,9 @@ export class MusicRoomComponent {
   currentVoteSkips: number = 0;
 
   subscription: Subscription | undefined;
+  devices: any;
 
-  loading: boolean = true;
-  loading$: Observable<boolean> = of(true);
-  private loadingSubject: Subject<boolean> = new Subject<boolean>();
-  constructor(public roomService: RoomService, private spotifyService: SpotifyService, private router: Router, public snackBar: MatSnackBar) {
-    this.loading$ = this.loadingSubject.asObservable();
-
-    this.loading$.subscribe(value => {
-      this.loading = value;
-    })
-  }
+  constructor(public roomService: RoomService, private spotifyService: SpotifyService, private router: Router, private pageLoadingService: PageLoaderService, private snackBarService: SnackbarService) {}
 
   async ngOnInit() {
     const roomIdentifier = this.router.url.split('/').pop();
@@ -41,6 +35,7 @@ export class MusicRoomComponent {
     //TODO: Could specify the error, so we differenciate between connection and server error
 
     try {
+      this.pageLoadingService.showFullPageLoader();
       await this.roomService.fetchRoom(roomIdentifier!);
       response = await this.spotifyService.loginIntoSpotify();
 
@@ -48,30 +43,24 @@ export class MusicRoomComponent {
         await this.openNewWindow(response.toString())
       }
 
-      this.loadingSubject.next(false);
+      this.pageLoadingService.hideFullPageLoader();
 
-      this.subscription = interval(1000)
-        .subscribe(() => {
-          this.getCurrentSong(this.roomService.room.roomIdentifier)
-        });
+      this.getCurrentSong(this.roomService.room.roomIdentifier)
 
     } catch(error) {
-      console.log(response)
-      this.openSnackBar("There seems to be a connection issue", "CONNECT")
+      this.pageLoadingService.hideFullPageLoader();
+      this.snackBarService.openSnackBar("There seems to be a connection issue", "CONNECT", () => {
+        window.location.reload();
+      })
     }
 
   }
 
-  openSnackBar(message: string, action: string) {
-    this.snackBar.open(message, action, {
-      duration: 100000,
-    });
-
-    this.snackBar._openedSnackBarRef?.onAction().subscribe(
-      () => {
-        window.location.reload();
-      }
-    )
+  subscribeCurrentSong() {
+    this.subscription = interval(1000)
+      .subscribe(() => {
+        this.getCurrentSong(this.roomService.room.roomIdentifier)
+      });
   }
 
   togglePlayingStatus() {
@@ -91,17 +80,23 @@ export class MusicRoomComponent {
     });
   }
 
+  //TODO: Interface
   getCurrentSong(roomIdentifier: string) {
-    this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: any) => {
-      this.songTitle = response.title;
-      this.artist = response.artist[0].name;
-      this.currentImgUrl = response.image_url[0].url;
-      this.currentProgress = response.time;
-      this.songDuration = response.duration;
-      this.playingStatus = response.is_playing;
-      this.currentVoteSkips = response.currentVotesToSkip;
-      this.neededVoteSkips = response.votesToSkip;
-    })
+      this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: any) => {
+        this.songTitle = response.title;
+        this.artist = response.artist[0].name;
+        this.currentImgUrl = response.image_url[0].url;
+        this.currentProgress = response.time;
+        this.songDuration = response.duration;
+        this.playingStatus = response.is_playing;
+        this.currentVoteSkips = response.currentVotesToSkip;
+        this.neededVoteSkips = response.votesToSkip;
+      }).catch(async (e) => {
+        if (e.status == 426) {
+          var devices = await this.spotifyService.getDevices();
+          console.log(devices);
+        }
+      })
   }
 
   formatDuration(durationInMilliseconds: number): string {
