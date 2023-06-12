@@ -1,13 +1,18 @@
-<div>
-  <button class="btn z-10" onclick="my_modal_1.showModal()">open modal</button>
-  <dialog id="my_modal_1" class="modal">
-    <form method="dialog" class="modal-box">
-      <h3 class="font-bold text-lg">Hello!</h3>
-      <p class="py-4">Press ESC key or click the button below to close</p>
-      <div class="modal-action">
-        <!-- if there is a button in form, it will close the modal -->
-        <button class="btn">Close</button>
+<div *ngIf="show" class="absolute w-screen h-screen flex justify-center items-center bg-slate-700 bg-opacity-50 z-10">
+  <form method="dialog" class="modal-box w-96">
+    <h3 class="font-bold text-lg">Select device</h3>
+    <p class="py-4">It seems that Spotify is currently not running on any device. Please choose one of the devices below.
+      If nothing is displayed try to start spotify on any device.</p>
+
+    <div *ngFor="let device of devices">
+      <div class="flex flex-row justify-between rounded-md p-1.5 shadow-xl border-[1px] border-slate-800 cursor-pointer mb-3" (click)="forceDeviceToPlay(device.id)">
+        <div class="flex flex-col">
+          <h3>{{device.name}}</h3>
+          <p>{{(device.id | slice:0:20) + '...'}}</p>
+        </div>
+        <i *ngIf="device.type == 'Computer'" class="bi bi-laptop text-4xl"></i>
+        <i *ngIf="device.type == 'Phone'" class="bi bi-phone text-4xl"></i>
       </div>
-    </form>
-  </dialog>
+    </div>
+  </form>
 </div>

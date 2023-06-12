@@ -2,10 +2,11 @@ import {Component, ChangeDetectorRef} from '@angular/core';
 import {RoomService} from "../room.service";
 import {NavigationExtras, Router} from "@angular/router";
 import {SpotifyService} from "../spotify.service";
-import {BehaviorSubject, interval, Observable, of, repeat, Subject, Subscription} from "rxjs";
+import {BehaviorSubject, delay, interval, Observable, of, repeat, Subject, Subscription} from "rxjs";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {PageLoaderService} from "../page-loader.service";
 import {SnackbarService} from "../snack-bar.service";
+import {ModalService} from "../modal.service";
 
 @Component({
   selector: 'app-music-room',
@@ -27,7 +28,13 @@ export class MusicRoomComponent {
   subscription: Subscription | undefined;
   devices: any;
 
-  constructor(public roomService: RoomService, private spotifyService: SpotifyService, private router: Router, private pageLoadingService: PageLoaderService, private snackBarService: SnackbarService) {}
+  constructor(public roomService: RoomService,
+              private spotifyService: SpotifyService,
+              private router: Router,
+              private pageLoadingService: PageLoaderService,
+              private snackBarService: SnackbarService,
+              private modalService: ModalService
+  ) {}
 
   async ngOnInit() {
     const roomIdentifier = this.router.url.split('/').pop();
@@ -81,7 +88,7 @@ export class MusicRoomComponent {
   }
 
   //TODO: Interface
-  getCurrentSong(roomIdentifier: string) {
+  async getCurrentSong(roomIdentifier: string) {
       this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: any) => {
         this.songTitle = response.title;
         this.artist = response.artist[0].name;
@@ -93,8 +100,8 @@ export class MusicRoomComponent {
         this.neededVoteSkips = response.votesToSkip;
       }).catch(async (e) => {
         if (e.status == 426) {
-          var devices = await this.spotifyService.getDevices();
-          console.log(devices);
+          let devices: any = await this.spotifyService.getDevices();
+          this.modalService.showModal(devices);
         }
       })
   }
