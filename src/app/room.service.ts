@@ -27,26 +27,39 @@ export class RoomService {
     }
   }
 
-  async fetchRoom(roomIdentifier: string): Promise<void> {
+  async fetchRoom(roomIdentifier: string): Promise<Object> {
     try {
       const response = this.http.get(
         credentials.baseUri + credentials.endpoints.room.get + `?roomIdentifier=${roomIdentifier}`,
         {withCredentials: true}
       );
       this.room = await lastValueFrom(response);
+      return this.room;
     } catch (error) {
       throw new Error();
     }
 
   }
 
-  async leaveRoom(roomIdentifier: string): Promise<void> {
+  async leaveRoom(roomIdentifier: string): Promise<Object> {
     try {
       const response = this.http.get(
         credentials.baseUri + credentials.endpoints.room.leave_room + `?roomIdentifier=${roomIdentifier}`,
         {withCredentials: true}
       );
-      console.log(lastValueFrom(response));
+      return await lastValueFrom(response);
+    } catch (error) {
+      throw new Error();
+    }
+  }
+
+  async checkRoomOwner(roomIdentifier: string): Promise<Object> {
+    try {
+      const response = this.http.get(
+        credentials.baseUri + credentials.endpoints.room.check_room_owner + `?roomIdentifier=${roomIdentifier}`,
+        {withCredentials: true}
+      )
+      return lastValueFrom(response);
     } catch (error) {
       throw new Error();
     }

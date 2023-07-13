@@ -1,9 +1,8 @@
-import {Component, ChangeDetectorRef} from '@angular/core';
+import {Component} from '@angular/core';
 import {RoomService} from "../room.service";
-import {NavigationExtras, Router} from "@angular/router";
+import {Router} from "@angular/router";
 import {SpotifyService} from "../spotify.service";
-import {BehaviorSubject, delay, interval, Observable, of, repeat, Subject, Subscription} from "rxjs";
-import {MatSnackBar} from "@angular/material/snack-bar";
+import {interval, Subscription} from "rxjs";
 import {PageLoaderService} from "../page-loader.service";
 import {SnackbarService} from "../snack-bar.service";
 import {ModalService} from "../modal.service";
@@ -42,19 +41,22 @@ export class MusicRoomComponent {
     //TODO: Could specify the error, so we differenciate between connection and server error
 
     try {
-      this.pageLoadingService.showFullPageLoader();
-      await this.roomService.fetchRoom(roomIdentifier!);
-      response = await this.spotifyService.loginIntoSpotify();
+      const isRoomOwner = await this.roomService.checkRoomOwner(roomIdentifier!)
+      if(isRoomOwner) {
+        this.pageLoadingService.showFullPageLoader();
+        await this.roomService.fetchRoom(roomIdentifier!);
+        response = await this.spotifyService.loginIntoSpotify();
 
-      if(response != null) {
-        await this.openNewWindow(response.toString())
+        if(response != null) {
+          await this.openNewWindow(response.toString())
+        }
+
+        this.pageLoadingService.hideFullPageLoader();
       }
 
-      this.pageLoadingService.hideFullPageLoader();
-
-      this.getCurrentSong(this.roomService.room.roomIdentifier)
-
+      this.subscribeCurrentSong();
     } catch(error) {
+      console.log(error)
       this.pageLoadingService.hideFullPageLoader();
       this.snackBarService.openSnackBar("There seems to be a connection issue", "CONNECT", () => {
         window.location.reload();
@@ -66,7 +68,21 @@ export class MusicRoomComponent {
   subscribeCurrentSong() {
     this.subscription = interval(1000)
       .subscribe(() => {
-        this.getCurrentSong(this.roomService.room.roomIdentifier)
+        this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: any) => {
+          this.songTitle = response.title;
+          this.artist = response.artist[0].name;
+          this.currentImgUrl = response.image_url[0].url;
+          this.currentProgress = response.time;
+          this.songDuration = response.duration;
+          this.playingStatus = response.is_playing;
+          this.currentVoteSkips = response.currentVotesToSkip;
+          this.neededVoteSkips = response.votesToSkip;
+        }).catch(async (e) => {
+          if (e.status == 426) {
+            let devices: any = await this.spotifyService.getDevices();
+            this.modalService.showModal(devices);
+          }
+        })
       });
   }
 
@@ -75,14 +91,22 @@ export class MusicRoomComponent {
     })
   }
 
-  skipSong() {
-    this.spotifyService.skipSong(this.roomService.room.roomIdentifier);
+  async skipSong() {
+    try {
+      const response = await this.spotifyService.skipSong(this.roomService.room.roomIdentifier);
+      console.log(response);
+    } catch (error) {
+      console.log("!!!")
+    }
+  }
+
+  rollBackSong() {
+    this.spotifyService.rollBackSong(this.roomService.room.roomIdentifier);
   }
 
   leaveRoom() {
     this.subscription?.unsubscribe()
     this.roomService.leaveRoom(this.roomService.room.roomIdentifier).then(() => {
-
       this.router.navigateByUrl("");
     });
   }
@@ -102,6 +126,7 @@ export class MusicRoomComponent {
         if (e.status == 426) {
           let devices: any = await this.spotifyService.getDevices();
           this.modalService.showModal(devices);
+          this.modalService.hideModal();
         }
       })
   }

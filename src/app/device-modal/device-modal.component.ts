@@ -34,10 +34,10 @@ export class DeviceModalComponent {
       });
   }
 
+  //TODO: Error checking
   async forceDeviceToPlay(deviceId: string) {
-    var tst = await this.spotifyService.forceDeviceToPlay(deviceId);
-    console.log(tst)
-    this.modalService.hideModal();
+    await this.spotifyService.forceDeviceToPlay(deviceId);
+    this.modalService.hideModal()
   }
 
   ngOnDestroy() {

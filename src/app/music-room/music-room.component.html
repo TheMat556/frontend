@@ -1,6 +1,6 @@
 <div class="flex flex-col justify-center h-screen items-center relative w-screen">
 
-  <div class="relative z-[5]">
+  <div class="relative z-10">
     <div class="justify-center items-center flex flex-col mb-3">
       <h1 class="font-bold text-2xl">RoomID</h1>
       <p>{{this.roomService.room.roomIdentifier}}</p>
@@ -11,18 +11,12 @@
       <i class="bi bi-gear-fill cursor-pointer" routerLink="/create-room"></i>
     </div>
 
-    <div class="flex justify-center">
-      <!--<div class="card w-80 h-80 bg-base-100 shadow-xl mt-8 brightness-50">
-        <img class="rounded-[20px]" src="./assets/dec110.jpg" alt="cover_next_song"/>
-      </div>-->
+    <app-search-field></app-search-field>
 
+    <div class="flex justify-center mt-3">
       <div class="card w-96 bg-base-100 shadow-xl">
         <img class="rounded-[20px]" [src]="currentImgUrl"/>
       </div>
-
-      <!--<div class="card w-80 h-80 bg-base-100 shadow-xl z-10 mt-8 brightness-50">
-        <img class="rounded-[20px]" src="./assets/bil-1.jpg" alt="cover_prev_song"/>
-      </div>-->
     </div>
 
     <div class="mt-10 w-96">
@@ -43,10 +37,10 @@
       </div>
 
       <div class="flex justify-between mx-5 mt-2 text-[60px]">
-        <i class="bi bi-skip-start cursor-pointer"></i>
+        <i (click)="rollBackSong()" class="bi bi-skip-start cursor-pointer"></i>
         <i *ngIf="playingStatus" class="bi bi-pause-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
         <i *ngIf="!playingStatus" class="bi bi-play-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
-        <i class="bi bi-skip-end cursor-pointer" (click)="skipSong()"></i>
+        <i (click)="skipSong()" class="bi bi-skip-end cursor-pointer"></i>
       </div>
 
       <div class="flex justify-center items-center">

@@ -4,6 +4,7 @@ import {Router} from '@angular/router';
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {PageLoaderService} from "../page-loader.service";
 import {SnackbarService} from "../snack-bar.service";
+import {delay} from "rxjs";
 
 @Component({
   selector: 'app-create-room',
@@ -22,13 +23,16 @@ export class CreateRoomComponent {
       this.pageLoaderService.showFullPageLoader("Loading")
       await this.roomService.createRoom(this.guestCanPause, this.requiredVotesToSkip)
 
+      console.log(this.roomService.room)
+
       if (this.roomService.room == null) {
         throw new Error();
       }
 
-      this.router.navigateByUrl('/music-room/' + this.roomService.room.roomIdentifier)
+      await this.router.navigateByUrl('/music-room/' + this.roomService.room.roomIdentifier)
       this.pageLoaderService.hideFullPageLoader()
     } catch (error) {
+      console.log(error)
       this.pageLoaderService.hideFullPageLoader()
       this.snackBarService.openSnackBar("Could not connect to the server.", "RETRY", () => {
         this.createRoomOnClick();

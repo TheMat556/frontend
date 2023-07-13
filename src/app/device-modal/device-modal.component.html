@@ -1,4 +1,4 @@
-<div *ngIf="show" class="absolute w-screen h-screen flex justify-center items-center bg-slate-700 bg-opacity-50 z-10">
+<div *ngIf="show" class="absolute w-screen h-screen flex justify-center items-center bg-slate-700 bg-opacity-50 z-[99]">
   <form method="dialog" class="modal-box w-96">
     <h3 class="font-bold text-lg">Select device</h3>
     <p class="py-4">It seems that Spotify is currently not running on any device. Please choose one of the devices below.
@@ -11,7 +11,7 @@
           <p>{{(device.id | slice:0:20) + '...'}}</p>
         </div>
         <i *ngIf="device.type == 'Computer'" class="bi bi-laptop text-4xl"></i>
-        <i *ngIf="device.type == 'Phone'" class="bi bi-phone text-4xl"></i>
+        <i *ngIf="device.type == 'Smartphone'" class="bi bi-phone text-4xl"></i>
       </div>
     </div>
   </form>

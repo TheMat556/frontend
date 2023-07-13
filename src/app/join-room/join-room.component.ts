@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import {RoomService} from "../room.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {Router} from "@angular/router";
+import {SnackbarService} from "../snack-bar.service";
 
 @Component({
   selector: 'app-join-room',
@@ -11,36 +12,29 @@ import {Router} from "@angular/router";
 export class JoinRoomComponent {
   roomIdentifier: string = "";
 
-  constructor(private roomService: RoomService, private snackBar: MatSnackBar, private router: Router) {
+  constructor(private roomService: RoomService, private snackbarService: SnackbarService, private router: Router) {
   }
 
   async joinRoom() {
     let response;
     if (this.roomIdentifier.length != 5) {
-      this.openSnackBar("RoomID must have 5 characters!", "RETRY")
+      this.snackbarService.openSnackBar("RoomId must at least be 5 characters!", "RETRY", () => this.joinRoom())
+      return;
     }
 
     try {
       response = await this.roomService.fetchRoom(this.roomIdentifier);
 
       if(response != null) {
-        this.router.navigateByUrl("/music-room");
+        this.router.navigateByUrl("/music-room/" + this.roomService.room.roomIdentifier);
+      } else {
+        this.snackbarService.openSnackBar("This room seems not to exist, please check your input.", "RETRY", () => this.joinRoom())
       }
 
     } catch(error) {
-      this.openSnackBar("RoomID must have 5 characters!", "RETRY")
+      console.log(error)
+      this.snackbarService.openSnackBar("Some error occured.", "RETRY", () => this.joinRoom())
     }
   }
 
-  openSnackBar(message: string, action: string) {
-    this.snackBar.open(message, action, {
-      duration: 3000,
-    });
-
-    this.snackBar._openedSnackBarRef?.onAction().subscribe(
-      () => {
-        this.joinRoom();
-      }
-    )
-  }
 }

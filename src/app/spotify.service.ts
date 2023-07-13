@@ -36,7 +36,6 @@ export class SpotifyService {
 
       return lastValueFrom(response);
     } catch (error) {
-      console.log("!!")
       throw error
     }
   }
@@ -55,12 +54,12 @@ export class SpotifyService {
     return lastValueFrom(response);
   }
 
-  forceDeviceToPlay(deviceId: any) {
-    const response = this.http.post(
-      credentials.baseUri + credentials.endpoints.spotify.forceDeviceToPlay,
-      {deviceId},
+  forceDeviceToPlay(deviceId: string) {
+    const response = this.http.get(
+      credentials.baseUri + credentials.endpoints.spotify.forceDeviceToPlay + "?deviceId=" + deviceId,
       {withCredentials: true}
     )
+    return lastValueFrom(response);
   }
 
 
@@ -80,4 +79,38 @@ export class SpotifyService {
     return lastValueFrom(response);
   }
 
+  async rollBackSong(roomIdentifier: string) {
+    const response = this.http.get(
+      credentials.baseUri + credentials.endpoints.spotify.rollback_song + "?code=" + roomIdentifier,
+      {withCredentials: true}
+    )
+    return await lastValueFrom(response);
+  }
+
+  //TODO: It would be better to pass the roomIdentifier
+  searchSong(queryString: string) {
+    const response = this.http.post(
+      credentials.baseUri + credentials.endpoints.spotify.search_song,
+      {
+        'roomIdentifier': this.roomServie.room.roomIdentifier,
+        'queryString': queryString
+      },
+      {withCredentials: true}
+    )
+
+    return lastValueFrom(response);
+  }
+
+  addTrackToPlackback(trackHref: string) {
+    const response = this.http.post(
+      credentials.baseUri + credentials.endpoints.spotify.add_track_to_playback,
+      {
+        'roomIdentifier': this.roomServie.room.roomIdentifier,
+        'trackHref': trackHref,
+      },
+      {withCredentials: true}
+    )
+
+    return lastValueFrom(response)
+  }
 }

@@ -14,6 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import { PageLoaderComponent } from './page-loader/page-loader.component';
 import { DeviceModalComponent } from './device-modal/device-modal.component';
+import { SearchFieldComponent } from './search-field/search-field.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { DeviceModalComponent } from './device-modal/device-modal.component';
     MusicRoomComponent,
     PageLoaderComponent,
     DeviceModalComponent,
+    SearchFieldComponent,
   ],
   imports: [
     BrowserModule,
