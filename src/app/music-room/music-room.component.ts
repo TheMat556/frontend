@@ -13,9 +13,7 @@ import {ModalService} from "../modal.service";
   styleUrls: ['./music-room.component.css']
 })
 export class MusicRoomComponent {
-  nextImgUrl: string = "";
   currentImgUrl: string = "";
-  prevImgUrl: string = "";
   songTitle: string = "...";
   artist: string = "...";
   currentProgress: number = 0;
@@ -41,22 +39,28 @@ export class MusicRoomComponent {
     //TODO: Could specify the error, so we differenciate between connection and server error
 
     try {
+      this.pageLoadingService.showFullPageLoader();
+      await this.roomService.fetchRoom(roomIdentifier!);
+
+      if(this.roomService.room == null) {
+        this.pageLoadingService.hideFullPageLoader();
+        this.snackBarService.openSnackBar("This room does not exist or has been closed please try another room id.", "RETRY", () => {this.router.navigateByUrl('/join-room')})
+        return;
+      }
+
       const isRoomOwner = await this.roomService.checkRoomOwner(roomIdentifier!)
+
       if(isRoomOwner) {
-        this.pageLoadingService.showFullPageLoader();
-        await this.roomService.fetchRoom(roomIdentifier!);
         response = await this.spotifyService.loginIntoSpotify();
 
         if(response != null) {
           await this.openNewWindow(response.toString())
         }
-
-        this.pageLoadingService.hideFullPageLoader();
       }
 
+      this.pageLoadingService.hideFullPageLoader();
       this.subscribeCurrentSong();
     } catch(error) {
-      console.log(error)
       this.pageLoadingService.hideFullPageLoader();
       this.snackBarService.openSnackBar("There seems to be a connection issue", "CONNECT", () => {
         window.location.reload();
@@ -94,9 +98,8 @@ export class MusicRoomComponent {
   async skipSong() {
     try {
       const response = await this.spotifyService.skipSong(this.roomService.room.roomIdentifier);
-      console.log(response);
     } catch (error) {
-      console.log("!!!")
+      console.log(error)
     }
   }
 
@@ -104,11 +107,12 @@ export class MusicRoomComponent {
     this.spotifyService.rollBackSong(this.roomService.room.roomIdentifier);
   }
 
-  leaveRoom() {
+  async leaveRoom() {
     this.subscription?.unsubscribe()
-    this.roomService.leaveRoom(this.roomService.room.roomIdentifier).then(() => {
-      this.router.navigateByUrl("");
-    });
+    if (await this.roomService.checkRoomOwner(this.roomService.room.roomIdentifier)) {
+      await this.roomService.leaveRoom(this.roomService.room.roomIdentifier);
+    }
+    this.router.navigateByUrl("");
   }
 
   //TODO: Interface

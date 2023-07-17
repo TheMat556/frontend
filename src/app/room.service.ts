@@ -35,8 +35,13 @@ export class RoomService {
       );
       this.room = await lastValueFrom(response);
       return this.room;
-    } catch (error) {
-      throw new Error();
+    } catch (error: any) {
+      if(error.status == 404) {
+        this.room = null;
+        return this.room;
+      } else {
+        throw new Error();
+      }
     }
 
   }
@@ -48,7 +53,7 @@ export class RoomService {
         {withCredentials: true}
       );
       return await lastValueFrom(response);
-    } catch (error) {
+    } catch (error: any) {
       throw new Error();
     }
   }
