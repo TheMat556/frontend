@@ -6,14 +6,9 @@ import {interval, Subscription} from "rxjs";
 import {PageLoaderService} from "../services/page-loader-service/page-loader.service";
 import {SnackbarService} from "../services/snack-bar-service/snack-bar.service";
 import {ModalService} from "../services/modal-service/modal.service";
-import {NoSuchRoomError} from "../errors/NoSuchRoomError";
 import {createDefaultSongDetails, SongDetails} from "../interfaces/SongDetails";
-import {NoDeviceRunningError} from "../errors/NoDeviceRunningError";
-import {CantTogglePlayingStateError} from "../errors/CantTogglePlayingStateError";
-import {NotAuthenticatedError} from "../errors/NotAuthenticatedError";
-import {AlreadyVotedError} from "../errors/AlreadyVotedError";
-import {CantSkipSongError} from "../errors/CantSkipSongError";
-import {OnlyHostPrivilegeError} from "../errors/OnlyHostPrivilegeError";
+import * as Errors from "../errors";
+
 
 @Component({
   selector: 'app-music-room',
@@ -24,12 +19,14 @@ export class MusicRoomComponent {
   songDetails: SongDetails;
   subscription: Subscription | undefined;
 
-  constructor(public roomService: RoomService,
-              private spotifyService: SpotifyService,
-              private router: Router,
-              private pageLoadingService: PageLoaderService,
-              private snackBarService: SnackbarService,
-              private modalService: ModalService
+  constructor
+  (
+    public roomService: RoomService,
+    private spotifyService: SpotifyService,
+    private router: Router,
+    private pageLoadingService: PageLoaderService,
+    private snackBarService: SnackbarService,
+    private modalService: ModalService
   )
   {
     this.songDetails = createDefaultSongDetails();
@@ -65,7 +62,7 @@ export class MusicRoomComponent {
           this.songDetails = response;
         }).catch(async (error) =>
         {
-          if (error instanceof NoSuchRoomError)
+          if (error instanceof Errors.NoSuchRoomError)
           {
             this.subscription?.unsubscribe();
             this.snackBarService.openSnackBar("Room does not exist anymore or has been closed.", "HOME", () =>
@@ -73,7 +70,7 @@ export class MusicRoomComponent {
               this.router.navigateByUrl("");
             }, Number.MAX_VALUE);
           }
-          else if (error instanceof NoDeviceRunningError)
+          else if (error instanceof Errors.NoDeviceRunningError)
           {
             let devices: any = await this.spotifyService.getDevices();
             this.modalService.showModal(devices);
@@ -92,7 +89,7 @@ export class MusicRoomComponent {
     }
     catch (error)
     {
-      if (error instanceof NoSuchRoomError)
+      if (error instanceof Errors.NoSuchRoomError)
       {
         this.snackBarService.openSnackBar("This room does not exist or has been closed please try another room id.", "RETRY", () =>
         {
@@ -163,20 +160,20 @@ export class MusicRoomComponent {
     }
     catch (error)
     {
-      if (error instanceof CantTogglePlayingStateError)
+      if (error instanceof Errors.CantTogglePlayingStateError)
       {
         this.snackBarService.openSnackBar("Host is not authenticated anymore.", "RETRY", () =>
         {
           this.togglePlayingStatus();
         });
       }
-      else if (error instanceof NotAuthenticatedError)
+      else if (error instanceof Errors.NotAuthenticatedError)
       {
         this.snackBarService.openSnackBar("Host is not authenticated anymore.", "", () =>
         {
         });
       }
-      else if (error instanceof NoSuchRoomError)
+      else if (error instanceof Errors.NoSuchRoomError)
       {
         this.snackBarService.openSnackBar("Room does not exist anymore or has been closed.", "HOME", () =>
         {
@@ -208,20 +205,20 @@ export class MusicRoomComponent {
     }
     catch (error)
     {
-      if (error instanceof AlreadyVotedError)
+      if (error instanceof Errors.AlreadyVotedError)
       {
         this.snackBarService.openSnackBar("You can only vote once per song!", "", () =>
         {
         });
       }
-      else if (error instanceof CantSkipSongError)
+      else if (error instanceof Errors.CantSkipSongError)
       {
         this.snackBarService.openSnackBar("Cant skip song currently.", "RETRY", () =>
         {
           this.skipSong();
         });
       }
-      else if (error instanceof NoSuchRoomError)
+      else if (error instanceof Errors.NoSuchRoomError)
       {
         this.snackBarService.openSnackBar("The room does not exist anymore or has been closed.", "HOME", () =>
         {
@@ -247,20 +244,20 @@ export class MusicRoomComponent {
     }
     catch (error)
     {
-      if (error instanceof OnlyHostPrivilegeError)
+      if (error instanceof Errors.OnlyHostPrivilegeError)
       {
         this.snackBarService.openSnackBar("Currently only the host can rollback songs.", "", () =>
         {
         })
       }
-      else if (error instanceof CantSkipSongError)
+      else if (error instanceof Errors.CantSkipSongError)
       {
         this.snackBarService.openSnackBar("Currently only the host can rollback songs.", "", () =>
         {
           this.rollBackSong();
         })
       }
-      else if (error instanceof NoSuchRoomError)
+      else if (error instanceof Errors.NoSuchRoomError)
       {
         this.snackBarService.openSnackBar("The room does not exist anymore or has been closed.", "HOME", () =>
         {
@@ -284,7 +281,7 @@ export class MusicRoomComponent {
     }
     catch (error)
     {
-      if (error instanceof NoSuchRoomError)
+      if (error instanceof Errors.NoSuchRoomError)
       {
         this.snackBarService.openSnackBar("The room does not exist anymore or has been closed.", "HOME", () =>
         {

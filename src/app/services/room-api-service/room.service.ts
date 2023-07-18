@@ -104,6 +104,23 @@ export class RoomService {
     }
   }
 
+  async checkIfUserHasRoom() {
+    try
+    {
+      return this.get(
+        credentials.baseUri + credentials.endpoints.room.check_if_user_has_room
+      );
+    }
+    catch (error)
+    {
+      if(error == 404)
+      {
+        throw new NoSuchRoomError("");
+      }
+      throw error;
+    }
+  }
+
   async get(url: string): Promise<Object>
   {
     return await lastValueFrom(this.http

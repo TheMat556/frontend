@@ -17,6 +17,7 @@ export class SearchFieldComponent {
   ngOnInit() {
     document.addEventListener('click', (event) => {
       const targetElement = event.target as HTMLElement;
+      //TODO: Not that clean
       const componentElement = document.querySelector('.relative.w-96.max-w-lg.z-20');
 
       if(componentElement != null) {
@@ -26,8 +27,6 @@ export class SearchFieldComponent {
       }
     });
   }
-
-
 
   setFocus(focus: boolean) {
     this.focus = focus;

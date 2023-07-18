@@ -20,8 +20,6 @@ import {OnlyHostPrivilegeError} from "../../errors/OnlyHostPrivilegeError";
 })
 export class SpotifyService {
 
-  //TODO rewrite try / catch
-
   constructor(private http: HttpClient, private roomService: RoomService)
   {
   }
@@ -204,6 +202,8 @@ export class SpotifyService {
     }
   }
 
+
+  //TODO: try/catch
   searchSong(queryString: string)
   {
     const response = this.http.post(
@@ -218,6 +218,7 @@ export class SpotifyService {
     return lastValueFrom(response);
   }
 
+  //TODO: try/catch
   addTrackToPlackback(trackHref: string)
   {
     const response = this.http.post(
