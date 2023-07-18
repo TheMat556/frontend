@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
-import {PageLoaderService} from "../page-loader.service";
+import {Component} from '@angular/core';
 import {takeWhile} from "rxjs";
-import {ModalService} from "../modal.service";
-import {SpotifyService} from "../spotify.service";
+import {ModalService} from "../services/modal-service/modal.service";
+import {SpotifyService} from "../services/spotify-api-service/spotify.service";
 
 @Component({
   selector: 'app-device-modal',

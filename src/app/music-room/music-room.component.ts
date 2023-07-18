@@ -1,11 +1,19 @@
 import {Component} from '@angular/core';
-import {RoomService} from "../room.service";
+import {RoomService} from "../services/room-api-service/room.service";
 import {Router} from "@angular/router";
-import {SpotifyService} from "../spotify.service";
+import {SpotifyService} from "../services/spotify-api-service/spotify.service";
 import {interval, Subscription} from "rxjs";
-import {PageLoaderService} from "../page-loader.service";
-import {SnackbarService} from "../snack-bar.service";
-import {ModalService} from "../modal.service";
+import {PageLoaderService} from "../services/page-loader-service/page-loader.service";
+import {SnackbarService} from "../services/snack-bar-service/snack-bar.service";
+import {ModalService} from "../services/modal-service/modal.service";
+import {NoSuchRoomError} from "../errors/NoSuchRoomError";
+import {createDefaultSongDetails, SongDetails} from "../interfaces/SongDetails";
+import {NoDeviceRunningError} from "../errors/NoDeviceRunningError";
+import {CantTogglePlayingStateError} from "../errors/CantTogglePlayingStateError";
+import {NotAuthenticatedError} from "../errors/NotAuthenticatedError";
+import {AlreadyVotedError} from "../errors/AlreadyVotedError";
+import {CantSkipSongError} from "../errors/CantSkipSongError";
+import {OnlyHostPrivilegeError} from "../errors/OnlyHostPrivilegeError";
 
 @Component({
   selector: 'app-music-room',
@@ -13,17 +21,8 @@ import {ModalService} from "../modal.service";
   styleUrls: ['./music-room.component.css']
 })
 export class MusicRoomComponent {
-  currentImgUrl: string = "";
-  songTitle: string = "...";
-  artist: string = "...";
-  currentProgress: number = 0;
-  songDuration: number = 100;
-  playingStatus: boolean = true;
-  neededVoteSkips: number = 0;
-  currentVoteSkips: number = 0;
-
+  songDetails: SongDetails;
   subscription: Subscription | undefined;
-  devices: any;
 
   constructor(public roomService: RoomService,
               private spotifyService: SpotifyService,
@@ -31,111 +30,275 @@ export class MusicRoomComponent {
               private pageLoadingService: PageLoaderService,
               private snackBarService: SnackbarService,
               private modalService: ModalService
-  ) {}
+  )
+  {
+    this.songDetails = createDefaultSongDetails();
+  }
 
-  async ngOnInit() {
+  async ngOnInit()
+  {
     const roomIdentifier = this.router.url.split('/').pop();
-    let response;
-    //TODO: Could specify the error, so we differenciate between connection and server error
-
-    try {
+    try
+    {
       this.pageLoadingService.showFullPageLoader();
-      await this.roomService.fetchRoom(roomIdentifier!);
 
-      if(this.roomService.room == null) {
-        this.pageLoadingService.hideFullPageLoader();
-        this.snackBarService.openSnackBar("This room does not exist or has been closed please try another room id.", "RETRY", () => {this.router.navigateByUrl('/join-room')})
-        return;
-      }
-
-      const isRoomOwner = await this.roomService.checkRoomOwner(roomIdentifier!)
-
-      if(isRoomOwner) {
-        response = await this.spotifyService.loginIntoSpotify();
-
-        if(response != null) {
-          await this.openNewWindow(response.toString())
-        }
-      }
+      await this.handleFetchRoom(roomIdentifier!);
+      await this.handleSpotifyLogin(roomIdentifier!);
 
       this.pageLoadingService.hideFullPageLoader();
       this.subscribeCurrentSong();
-    } catch(error) {
+    }
+    catch (error)
+    {
       this.pageLoadingService.hideFullPageLoader();
-      this.snackBarService.openSnackBar("There seems to be a connection issue", "CONNECT", () => {
-        window.location.reload();
-      })
     }
 
   }
 
-  subscribeCurrentSong() {
+  subscribeCurrentSong()
+  {
     this.subscription = interval(1000)
-      .subscribe(() => {
-        this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: any) => {
-          this.songTitle = response.title;
-          this.artist = response.artist[0].name;
-          this.currentImgUrl = response.image_url[0].url;
-          this.currentProgress = response.time;
-          this.songDuration = response.duration;
-          this.playingStatus = response.is_playing;
-          this.currentVoteSkips = response.currentVotesToSkip;
-          this.neededVoteSkips = response.votesToSkip;
-        }).catch(async (e) => {
-          if (e.status == 426) {
+      .subscribe(() =>
+      {
+        this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: SongDetails) =>
+        {
+          this.songDetails = response;
+        }).catch(async (error) =>
+        {
+          if (error instanceof NoSuchRoomError)
+          {
+            this.subscription?.unsubscribe();
+            this.snackBarService.openSnackBar("Room does not exist anymore or has been closed.", "HOME", () =>
+            {
+              this.router.navigateByUrl("");
+            }, Number.MAX_VALUE);
+          }
+          else if (error instanceof NoDeviceRunningError)
+          {
             let devices: any = await this.spotifyService.getDevices();
             this.modalService.showModal(devices);
           }
+
+          throw error;
         })
       });
   }
 
-  togglePlayingStatus() {
-    this.spotifyService.togglePlayingStatus(this.roomService.room.roomIdentifier).then(() => {
-    })
-  }
+  async handleFetchRoom(roomIdentifier: string)
+  {
+    try
+    {
+      await this.roomService.fetchRoom(roomIdentifier);
+    }
+    catch (error)
+    {
+      if (error instanceof NoSuchRoomError)
+      {
+        this.snackBarService.openSnackBar("This room does not exist or has been closed please try another room id.", "RETRY", () =>
+        {
+          this.router.navigateByUrl('/join-room')
+        });
+      }
+      else
+      {
+        this.snackBarService.openSnackBar("Error occured.", "RETRY", () =>
+        {
+          window.location.reload();
+        })
+      }
 
-  async skipSong() {
-    try {
-      const response = await this.spotifyService.skipSong(this.roomService.room.roomIdentifier);
-    } catch (error) {
-      console.log(error)
+      throw error;
     }
   }
 
-  rollBackSong() {
-    this.spotifyService.rollBackSong(this.roomService.room.roomIdentifier);
-  }
+  async handleSpotifyLogin(roomIdentifier: string)
+  {
+    try
+    {
+      const isRoomOwner = await this.roomService.checkRoomOwner(roomIdentifier)
 
-  async leaveRoom() {
-    this.subscription?.unsubscribe()
-    if (await this.roomService.checkRoomOwner(this.roomService.room.roomIdentifier)) {
-      await this.roomService.leaveRoom(this.roomService.room.roomIdentifier);
-    }
-    this.router.navigateByUrl("");
-  }
+      if (isRoomOwner)
+      {
+        const response = await this.spotifyService.loginIntoSpotify();
 
-  //TODO: Interface
-  async getCurrentSong(roomIdentifier: string) {
-      this.spotifyService.getCurrentSong(this.roomService.room.roomIdentifier).then((response: any) => {
-        this.songTitle = response.title;
-        this.artist = response.artist[0].name;
-        this.currentImgUrl = response.image_url[0].url;
-        this.currentProgress = response.time;
-        this.songDuration = response.duration;
-        this.playingStatus = response.is_playing;
-        this.currentVoteSkips = response.currentVotesToSkip;
-        this.neededVoteSkips = response.votesToSkip;
-      }).catch(async (e) => {
-        if (e.status == 426) {
-          let devices: any = await this.spotifyService.getDevices();
-          this.modalService.showModal(devices);
-          this.modalService.hideModal();
+        if (response != null)
+        {
+          await this.openNewWindow(response.toString())
         }
-      })
+      }
+    }
+    catch (error: any)
+    {
+      if (error.status == 404)
+      {
+        this.snackBarService.openSnackBar("Room does not exist", "RETRY", () =>
+        {
+          window.location.reload();
+        })
+      }
+      else if (error.status == 201)
+      {
+        this.snackBarService.openSnackBar("You are already authenticated", "RETRY", () =>
+        {
+        })
+      }
+      else
+      {
+        this.snackBarService.openSnackBar("Unspecified error occurred", "RETRY", () =>
+        {
+          window.location.reload();
+        })
+      }
+
+      throw error;
+    }
+
   }
 
-  formatDuration(durationInMilliseconds: number): string {
+  async togglePlayingStatus()
+  {
+    try
+    {
+      await this.spotifyService.togglePlayingStatus(this.roomService.room.roomIdentifier);
+    }
+    catch (error)
+    {
+      if (error instanceof CantTogglePlayingStateError)
+      {
+        this.snackBarService.openSnackBar("Host is not authenticated anymore.", "RETRY", () =>
+        {
+          this.togglePlayingStatus();
+        });
+      }
+      else if (error instanceof NotAuthenticatedError)
+      {
+        this.snackBarService.openSnackBar("Host is not authenticated anymore.", "", () =>
+        {
+        });
+      }
+      else if (error instanceof NoSuchRoomError)
+      {
+        this.snackBarService.openSnackBar("Room does not exist anymore or has been closed.", "HOME", () =>
+        {
+          this.router.navigateByUrl("");
+        }, Number.MAX_VALUE);
+      }
+      throw error;
+    }
+  }
+
+  async skipSong()
+  {
+    try
+    {
+      const response: any = await this.spotifyService.skipSong(this.roomService.room.roomIdentifier);
+
+      if (response.message == "voted")
+      {
+        this.snackBarService.openSnackBar("Successfully voted for a skip!", "", () =>
+        {
+        });
+      }
+      else if (response.message == "skipped")
+      {
+        this.snackBarService.openSnackBar("Song has been skipped successfully!", "", () =>
+        {
+        });
+      }
+    }
+    catch (error)
+    {
+      if (error instanceof AlreadyVotedError)
+      {
+        this.snackBarService.openSnackBar("You can only vote once per song!", "", () =>
+        {
+        });
+      }
+      else if (error instanceof CantSkipSongError)
+      {
+        this.snackBarService.openSnackBar("Cant skip song currently.", "RETRY", () =>
+        {
+          this.skipSong();
+        });
+      }
+      else if (error instanceof NoSuchRoomError)
+      {
+        this.snackBarService.openSnackBar("The room does not exist anymore or has been closed.", "HOME", () =>
+        {
+          this.router.navigateByUrl("");
+        });
+      }
+      throw error;
+    }
+  }
+
+  async rollBackSong()
+  {
+    try
+    {
+      const response: any = await this.spotifyService.rollBackSong(this.roomService.room.roomIdentifier);
+
+      if (response.message == "rollback")
+      {
+        this.snackBarService.openSnackBar("Successfully rolled back!", "", () =>
+        {
+        })
+      }
+    }
+    catch (error)
+    {
+      if (error instanceof OnlyHostPrivilegeError)
+      {
+        this.snackBarService.openSnackBar("Currently only the host can rollback songs.", "", () =>
+        {
+        })
+      }
+      else if (error instanceof CantSkipSongError)
+      {
+        this.snackBarService.openSnackBar("Currently only the host can rollback songs.", "", () =>
+        {
+          this.rollBackSong();
+        })
+      }
+      else if (error instanceof NoSuchRoomError)
+      {
+        this.snackBarService.openSnackBar("The room does not exist anymore or has been closed.", "HOME", () =>
+        {
+          this.router.navigateByUrl("");
+        });
+      }
+      throw error;
+    }
+  }
+
+  async leaveRoom()
+  {
+    try
+    {
+      this.subscription?.unsubscribe()
+      if (await this.roomService.checkRoomOwner(this.roomService.room.roomIdentifier))
+      {
+        await this.roomService.leaveRoom(this.roomService.room.roomIdentifier);
+      }
+      this.router.navigateByUrl("");
+    }
+    catch (error)
+    {
+      if (error instanceof NoSuchRoomError)
+      {
+        this.snackBarService.openSnackBar("The room does not exist anymore or has been closed.", "HOME", () =>
+        {
+          this.router.navigateByUrl("");
+        });
+      }
+
+      throw error;
+    }
+
+  }
+
+  formatDuration(durationInMilliseconds: number): string
+  {
     const totalSeconds = Math.floor(durationInMilliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -143,22 +306,28 @@ export class MusicRoomComponent {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
-  openNewWindow(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+  openNewWindow(url: string): Promise<void>
+  {
+    return new Promise((resolve, reject) =>
+    {
       const newWindow = window.open(url);
 
-      if (!newWindow) {
+      if (!newWindow)
+      {
         reject(new Error('Failed to open new window'));
       }
 
-      const checkClosed = setInterval(() => {
-        if (newWindow!.closed) {
+      const checkClosed = setInterval(() =>
+      {
+        if (newWindow!.closed)
+        {
           clearInterval(checkClosed);
           resolve();
         }
       }, 1000);
 
-      newWindow!.addEventListener('close', () => {
+      newWindow!.addEventListener('close', () =>
+      {
         clearInterval(checkClosed);
         resolve();
       });

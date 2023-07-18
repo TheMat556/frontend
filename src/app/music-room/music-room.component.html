@@ -14,37 +14,40 @@
     <app-search-field></app-search-field>
 
     <div class="flex justify-center mt-3">
-      <div class="card w-96 bg-base-100 shadow-xl">
-        <img class="rounded-[20px]" [src]="currentImgUrl"/>
+      <div class="card w-96 bg-base-100 shadow-xl relative">
+        <img class="rounded-[20px] z-[5] absolute" [src]="songDetails.currentImgUrl"/>
+        <div class="w-96 h-96 flex justify-center items-center">
+          <mat-progress-spinner color="primary" mode="indeterminate"></mat-progress-spinner>
+        </div>
       </div>
     </div>
 
     <div class="mt-10 w-96">
-      <h2 class="text-[22px] font-semibold">{{ songTitle }}</h2>
-      <p>{{ artist }}</p>
+      <h2 class="text-[22px] font-semibold">{{ songDetails.songTitle }}</h2>
+      <p>{{ songDetails.artist }}</p>
     </div>
 
     <div class="relative flex flex-col mt-5">
-      <progress class="progress w-96 bg-base-300 progress-primary" [value]="currentProgress"
-                [max]="songDuration"></progress>
+      <progress class="progress w-96 bg-base-300 progress-primary" [value]="songDetails.currentProgress"
+                [max]="songDetails.songDuration"></progress>
       <div class="flex justify-between mx-2">
         <p>
-          {{ formatDuration(currentProgress) }}
+          {{ formatDuration(songDetails.currentProgress) }}
         </p>
         <p>
-          {{ formatDuration(songDuration) }}
+          {{ formatDuration(songDetails.songDuration) }}
         </p>
       </div>
 
       <div class="flex justify-between mx-5 mt-2 text-[60px]">
         <i (click)="rollBackSong()" class="bi bi-skip-start cursor-pointer"></i>
-        <i *ngIf="playingStatus" class="bi bi-pause-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
-        <i *ngIf="!playingStatus" class="bi bi-play-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
+        <i *ngIf="songDetails.playingStatus" class="bi bi-pause-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
+        <i *ngIf="!songDetails.playingStatus" class="bi bi-play-circle-fill cursor-pointer" (click)="togglePlayingStatus()"></i>
         <i (click)="skipSong()" class="bi bi-skip-end cursor-pointer"></i>
       </div>
 
       <div class="flex justify-center items-center">
-        <h2 class="text-[22px] font-semibold">{{ currentVoteSkips }}/{{ neededVoteSkips }}</h2>
+        <h2 class="text-[22px] font-semibold">{{ songDetails.currentVotes }}/{{ songDetails.neededVotesToSkip }}</h2>
       </div>
     </div>
   </div>
