@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {RoomService} from "../services/room-api-service/room.service";
-import {MatSnackBar} from "@angular/material/snack-bar";
 import {Router} from "@angular/router";
 import {SnackbarService} from "../services/snack-bar-service/snack-bar.service";
-import {NoSuchRoomError} from "../errors/NoSuchRoomError";
+import {NoSuchRoomError} from "../errors";
 
 @Component({
   selector: 'app-join-room',
@@ -13,28 +12,36 @@ import {NoSuchRoomError} from "../errors/NoSuchRoomError";
 export class JoinRoomComponent {
   roomIdentifier: string = "";
 
-  constructor(private roomService: RoomService, private snackbarService: SnackbarService, private router: Router) {
+  constructor(private roomService: RoomService, private snackbarService: SnackbarService, private router: Router)
+  {
   }
 
-  async joinRoom() {
+  async joinRoom()
+  {
     let response;
-    if (this.roomIdentifier.length != 5) {
+    if (this.roomIdentifier.length != 5)
+    {
       this.snackbarService.openSnackBar("RoomId must be 5 characters!", "RETRY", () => this.joinRoom())
       return;
     }
 
-    try {
+    try
+    {
       response = await this.roomService.fetchRoom(this.roomIdentifier);
-      console.log(response);
 
-      if(response != null) {
+      if (response != null)
+      {
         this.router.navigateByUrl("/music-room/" + this.roomService.room.roomIdentifier);
-      } else {
+      }
+      else
+      {
         this.snackbarService.openSnackBar("This room seems not to exist, please check your input.", "RETRY", () => this.joinRoom())
       }
 
-    } catch(error) {
-      if(error instanceof NoSuchRoomError)
+    }
+    catch (error)
+    {
+      if (error instanceof NoSuchRoomError)
       {
         this.snackbarService.openSnackBar("There is no room with the entered roomid, please try another.", "RETRY", () => this.joinRoom())
       }

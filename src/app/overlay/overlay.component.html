@@ -1,0 +1,9 @@
+<!-- overlay.component.html -->
+<div *ngIf="isOpen" class="w-full h-full justify-center flex items-center absolute z-50 bg-slate-700 bg-opacity-50">
+  <div class="overlay-container">
+    <div class="overlay-content">
+      <ng-container *ngTemplateOutlet="content" class="z-50"></ng-container>
+    </div>
+  </div>
+</div>
+

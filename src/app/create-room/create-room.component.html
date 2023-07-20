@@ -1,5 +1,9 @@
 <div class="relative z-[5]">
   <div class="flex justify-center items-center h-screen">
+    <ng-template #loadingSpinner>
+      <mat-progress-spinner color="primary" mode="indeterminate"></mat-progress-spinner>
+    </ng-template>
+
     <div class="card w-96 bg-base-200 shadow-xl">
       <div class="card-body items-center text-center">
         <h2 class="card-title">Create your room</h2>
@@ -23,7 +27,7 @@
           </div>
         </div>
 
-        <div mt-1>
+        <div>
           <input type="text" class="text-center" [(ngModel)]="requiredVotesToSkip">
           <p>
             Votes required to skip a song

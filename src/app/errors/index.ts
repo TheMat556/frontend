@@ -4,4 +4,7 @@ export {NotAuthenticatedError} from './NotAuthenticatedError';
 export {AlreadyVotedError} from './AlreadyVotedError';
 export {CantSkipSongError} from './CantSkipSongError';
 export {OnlyHostPrivilegeError} from './OnlyHostPrivilegeError';
-export {NoSuchRoomError} from "../errors/NoSuchRoomError";
+export {NoSuchRoomError} from "./NoSuchRoomError";
+export {BlockedPopupError} from "./BlockedPopupError";
+export {AlreadyAuthenticated} from "./AlreadyAuthenticated"
+export {NoLoginRequired} from "./NoLoginRequired"

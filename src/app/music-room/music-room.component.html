@@ -1,6 +1,13 @@
 <div class="flex flex-col justify-center h-screen items-center relative w-screen">
-
   <div class="relative z-10">
+    <ng-template #loadingSpinner>
+      <mat-progress-spinner color="primary" mode="indeterminate"></mat-progress-spinner>
+    </ng-template>
+
+    <ng-template #deviceModal>
+      <app-device-modal [devices]="this.devices"></app-device-modal>
+    </ng-template>
+
     <div class="justify-center items-center flex flex-col mb-3">
       <h1 class="font-bold text-2xl">RoomID</h1>
       <p>{{this.roomService.room.roomIdentifier}}</p>

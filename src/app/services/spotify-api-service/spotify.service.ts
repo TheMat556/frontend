@@ -4,16 +4,8 @@ import {HttpClient} from "@angular/common/http";
 import credentials from "../../../assets/credentials.json";
 import {lastValueFrom} from "rxjs";
 import {RoomService} from "../room-api-service/room.service";
-import {AlreadyAuthenticated} from "../../errors/AlreadyAuthenticated";
-import {NoLoginRequired} from "../../errors/NoLoginRequired";
-import {NoSuchRoomError} from "../../errors/NoSuchRoomError";
-import {NoDeviceRunningError} from "../../errors/NoDeviceRunningError";
 import {SongDetails} from "../../interfaces/SongDetails";
-import {CantTogglePlayingStateError} from "../../errors/CantTogglePlayingStateError";
-import {NotAuthenticatedError} from "../../errors/NotAuthenticatedError";
-import {AlreadyVotedError} from "../../errors/AlreadyVotedError";
-import {CantSkipSongError} from "../../errors/CantSkipSongError";
-import {OnlyHostPrivilegeError} from "../../errors/OnlyHostPrivilegeError";
+import * as Errors from "../../errors";
 
 @Injectable({
   providedIn: 'root'
@@ -53,15 +45,15 @@ export class SpotifyService {
     {
       if (error.status == 201)
       {
-        throw new AlreadyAuthenticated("");
+        throw new Errors.AlreadyAuthenticated("");
       }
       else if (error.status == 406)
       {
-        throw new NoLoginRequired("");
+        throw new Errors.NoLoginRequired("");
       }
       else if (error.status == 404)
       {
-        throw new NoSuchRoomError("");
+        throw new Errors.NoSuchRoomError("");
       }
       else
       {
@@ -81,13 +73,13 @@ export class SpotifyService {
     }
     catch (error: any)
     {
-      if (error.status == 403)
+      if (error.status == 426)
       {
-        throw new NoDeviceRunningError("");
+        throw new Errors.NoDeviceRunningError("");
       }
       else if (error.status == 404)
       {
-        throw new NoSuchRoomError("");
+        throw new Errors.NoSuchRoomError("");
       }
 
       throw error;
@@ -134,15 +126,15 @@ export class SpotifyService {
     {
       if (error.status == 500)
       {
-        throw new CantTogglePlayingStateError("");
+        throw new Errors.CantTogglePlayingStateError("");
       }
       else if (error.status == 404)
       {
-        throw new NotAuthenticatedError("");
+        throw new Errors.NotAuthenticatedError("");
       }
       else if (error.status == 403)
       {
-        throw new NoSuchRoomError("");
+        throw new Errors.NoSuchRoomError("");
       }
 
       throw error;
@@ -161,15 +153,15 @@ export class SpotifyService {
     {
       if (error.status == 406)
       {
-        throw new AlreadyVotedError("");
+        throw new Errors.AlreadyVotedError("");
       }
       else if (error.status == 500)
       {
-        throw new CantSkipSongError("");
+        throw new Errors.CantSkipSongError("");
       }
       else if (error.status == 404)
       {
-        throw new NoSuchRoomError("");
+        throw new Errors.NoSuchRoomError("");
       }
       throw error;
     }
@@ -188,48 +180,67 @@ export class SpotifyService {
     {
       if (error.status == 403)
       {
-        throw new OnlyHostPrivilegeError("");
+        throw new Errors.OnlyHostPrivilegeError("");
       }
       else if (error.status == 500)
       {
-        throw new CantSkipSongError("");
+        throw new Errors.CantSkipSongError("");
       }
       else if (error.status == 404)
       {
-        throw new NoSuchRoomError("");
+        throw new Errors.NoSuchRoomError("");
       }
       throw error;
     }
   }
 
-
-  //TODO: try/catch
-  searchSong(queryString: string)
+  async searchSong(queryString: string)
   {
-    const response = this.http.post(
-      credentials.baseUri + credentials.endpoints.spotify.search_song,
-      {
+    try
+    {
+      const requestBody = {
         'roomIdentifier': this.roomService.room.roomIdentifier,
         'queryString': queryString
-      },
-      {withCredentials: true}
-    )
+      };
 
-    return lastValueFrom(response);
+      return await this.post(
+        credentials.baseUri + credentials.endpoints.spotify.search_song,
+        requestBody
+      );
+    }
+    catch (error: any)
+    {
+      if(error.status == 404) {
+        throw new Errors.NoSuchRoomError("");
+      }
+
+      throw error;
+    }
+
   }
 
-  //TODO: try/catch
-  addTrackToPlackback(trackHref: string)
+  async addTrackToPlayback(trackHref: string)
   {
-    const response = this.http.post(
-      credentials.baseUri + credentials.endpoints.spotify.add_track_to_playback,
-      {
+    try
+    {
+      const requestBody = {
         'roomIdentifier': this.roomService.room.roomIdentifier,
         'trackHref': trackHref,
-      },
-      {withCredentials: true}
-    )
+      };
 
-    return lastValueFrom(response)
+      return await this.post(
+        credentials.baseUri + credentials.endpoints.spotify.add_track_to_playback,
+        requestBody
+      );
+    }
+    catch (error)
+    {
+      if (error == 404 )
+      {
+        throw new Errors.NoSuchRoomError("");
+      }
+
+      throw error;
+    }
   }
 }

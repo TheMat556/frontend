@@ -15,6 +15,8 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import { PageLoaderComponent } from './page-loader/page-loader.component';
 import { DeviceModalComponent } from './device-modal/device-modal.component';
 import { SearchFieldComponent } from './search-field/search-field.component';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { OverlayComponent } from './overlay/overlay.component';
 
 @NgModule({
   declarations: [
@@ -26,6 +28,7 @@ import { SearchFieldComponent } from './search-field/search-field.component';
     PageLoaderComponent,
     DeviceModalComponent,
     SearchFieldComponent,
+    OverlayComponent,
   ],
   imports: [
     BrowserModule,
@@ -34,7 +37,8 @@ import { SearchFieldComponent } from './search-field/search-field.component';
     MatSnackBarModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    OverlayModule
   ],
   providers: [],
   bootstrap: [AppComponent]

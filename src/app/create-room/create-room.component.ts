@@ -1,11 +1,10 @@
-import {Component} from '@angular/core';
+import {Component, TemplateRef, ViewChild} from '@angular/core';
 import {RoomService} from "../services/room-api-service/room.service";
 import {Router} from '@angular/router';
-import {MatSnackBar} from "@angular/material/snack-bar";
-import {PageLoaderService} from "../services/page-loader-service/page-loader.service";
 import {SnackbarService} from "../services/snack-bar-service/snack-bar.service";
 import {Room} from "../interfaces/Room";
-import {NoSuchRoomError} from "../errors/NoSuchRoomError";
+import {NoSuchRoomError} from "../errors";
+import {OverlayService} from "../overlay.service";
 
 @Component({
   selector: 'app-create-room',
@@ -17,13 +16,14 @@ export class CreateRoomComponent {
   public requiredVotesToSkip: number = 2;
   public buttonText = "Create";
 
+  @ViewChild('loadingSpinner', { static: true }) loadingSpinner!: TemplateRef<any>;
+
   constructor
   (
     private snackBarService: SnackbarService,
     private roomService: RoomService,
     private router: Router,
-    private pageLoaderService: PageLoaderService,
-    public snackBar: MatSnackBar
+    private overlayService: OverlayService
   )
   {
   }
@@ -52,15 +52,15 @@ export class CreateRoomComponent {
   {
     try
     {
-      this.pageLoaderService.showFullPageLoader("Loading")
+      this.overlayService.openOverlay(this.loadingSpinner);
       await this.roomService.createRoom(this.guestCanPause, this.requiredVotesToSkip)
 
       await this.router.navigateByUrl('/music-room/' + this.roomService.room.roomIdentifier)
-      this.pageLoaderService.hideFullPageLoader()
+      this.overlayService.closeOverlay()
     }
     catch (error)
     {
-      this.pageLoaderService.hideFullPageLoader()
+      this.overlayService.closeOverlay()
       this.snackBarService.openSnackBar("Could not connect to the server.", "RETRY", () =>
       {
         this.createRoomOnClick();

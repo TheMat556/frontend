@@ -1,14 +1,12 @@
-import {Component} from '@angular/core';
+import {Component, TemplateRef, ViewChild} from '@angular/core';
 import {RoomService} from "../services/room-api-service/room.service";
 import {Router} from "@angular/router";
 import {SpotifyService} from "../services/spotify-api-service/spotify.service";
 import {interval, Subscription} from "rxjs";
-import {PageLoaderService} from "../services/page-loader-service/page-loader.service";
 import {SnackbarService} from "../services/snack-bar-service/snack-bar.service";
-import {ModalService} from "../services/modal-service/modal.service";
 import {createDefaultSongDetails, SongDetails} from "../interfaces/SongDetails";
 import * as Errors from "../errors";
-
+import {OverlayService} from "../overlay.service";
 
 @Component({
   selector: 'app-music-room',
@@ -18,15 +16,19 @@ import * as Errors from "../errors";
 export class MusicRoomComponent {
   songDetails: SongDetails;
   subscription: Subscription | undefined;
+  devices: any;
+
+  @ViewChild('loadingSpinner', { static: true }) loadingSpinner!: TemplateRef<any>;
+  @ViewChild('deviceModal', { static: true }) deviceModal!: TemplateRef<any>;
+
 
   constructor
   (
     public roomService: RoomService,
     private spotifyService: SpotifyService,
     private router: Router,
-    private pageLoadingService: PageLoaderService,
     private snackBarService: SnackbarService,
-    private modalService: ModalService
+    private overlayService: OverlayService
   )
   {
     this.songDetails = createDefaultSongDetails();
@@ -37,17 +39,17 @@ export class MusicRoomComponent {
     const roomIdentifier = this.router.url.split('/').pop();
     try
     {
-      this.pageLoadingService.showFullPageLoader();
+      this.overlayService.openOverlay(this.loadingSpinner);
 
       await this.handleFetchRoom(roomIdentifier!);
       await this.handleSpotifyLogin(roomIdentifier!);
 
-      this.pageLoadingService.hideFullPageLoader();
+      this.overlayService.closeOverlay();
       this.subscribeCurrentSong();
     }
     catch (error)
     {
-      this.pageLoadingService.hideFullPageLoader();
+      this.overlayService.closeOverlay();
     }
 
   }
@@ -72,8 +74,8 @@ export class MusicRoomComponent {
           }
           else if (error instanceof Errors.NoDeviceRunningError)
           {
-            let devices: any = await this.spotifyService.getDevices();
-            this.modalService.showModal(devices);
+            this.devices = await this.spotifyService.getDevices();
+            this.overlayService.openOverlay(this.deviceModal);
           }
 
           throw error;
@@ -126,18 +128,24 @@ export class MusicRoomComponent {
     }
     catch (error: any)
     {
-      if (error.status == 404)
+      if (error instanceof Errors.NoSuchRoomError)
       {
         this.snackBarService.openSnackBar("Room does not exist", "RETRY", () =>
         {
           window.location.reload();
         })
       }
-      else if (error.status == 201)
+      else if (error instanceof Errors.AlreadyAuthenticated)
       {
         this.snackBarService.openSnackBar("You are already authenticated", "RETRY", () =>
         {
         })
+      }
+      else if (error instanceof Errors.BlockedPopupError)
+      {
+        this.snackBarService.openSnackBar("Your browser is blocking popups. Please allow popups and refresh the window after updating the settings.", "REFRESH", () => {
+          window.location.reload()
+        }, Number.MAX_VALUE)
       }
       else
       {
@@ -309,9 +317,9 @@ export class MusicRoomComponent {
     {
       const newWindow = window.open(url);
 
-      if (!newWindow)
+      if (newWindow == null)
       {
-        reject(new Error('Failed to open new window'));
+        reject(new Errors.BlockedPopupError(""));
       }
 
       const checkClosed = setInterval(() =>

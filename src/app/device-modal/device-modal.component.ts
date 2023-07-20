@@ -1,7 +1,7 @@
-import {Component} from '@angular/core';
-import {takeWhile} from "rxjs";
-import {ModalService} from "../services/modal-service/modal.service";
+import {Component, Input} from '@angular/core';
 import {SpotifyService} from "../services/spotify-api-service/spotify.service";
+import {OverlayService} from "../overlay.service";
+import {SnackbarService} from "../services/snack-bar-service/snack-bar.service";
 
 @Component({
   selector: 'app-device-modal',
@@ -9,37 +9,32 @@ import {SpotifyService} from "../services/spotify-api-service/spotify.service";
   styleUrls: ['./device-modal.component.css']
 })
 export class DeviceModalComponent {
-  constructor(private modalService: ModalService, private spotifyService: SpotifyService) { }
-  show: boolean = false;
-  devices: any;
+  @Input() devices: any;
 
-
-  private _subscribed: boolean = true;
-  ngOnInit(): void {
-    this.subscribe();
+  //devices: any;
+  constructor
+  (
+    private spotifyService: SpotifyService,
+    private overlayService: OverlayService,
+    private snackBarService: SnackbarService,
+  )
+  {
   }
-  private subscribe() {
-    this.modalService.state
-      .pipe(takeWhile(() => this._subscribed))
-      .subscribe(show => {
-        this.show = show;
+
+  async forceDeviceToPlay(deviceId: string)
+  {
+    try
+    {
+      await this.spotifyService.forceDeviceToPlay(deviceId);
+      this.overlayService.closeOverlay();
+    }
+    catch (error)
+    {
+      this.snackBarService.openSnackBar("Unspecified error occurred.", "RETRY", () =>
+      {
+        this.forceDeviceToPlay(deviceId);
       });
-    this.modalService.devices
-      .pipe(takeWhile(() => this._subscribed))
-      .subscribe(devices => {
-        if (!!devices) {
-          this.devices = devices;
-        }
-      });
-  }
-
-  //TODO: Error checking
-  async forceDeviceToPlay(deviceId: string) {
-    await this.spotifyService.forceDeviceToPlay(deviceId);
-    this.modalService.hideModal()
-  }
-
-  ngOnDestroy() {
-    this._subscribed = false;
+      throw error;
+    }
   }
 }
